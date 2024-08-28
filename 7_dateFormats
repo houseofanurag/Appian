@@ -1,1 +1,61 @@
+Rule to identify date format
 
+#dateString (Text)
+a!match(
+  value: ri!dateString,
+  whenTrue: a!isNullOrEmpty(fv!value),
+  then: "Empty or null date string",
+  /* Empty value check */
+  whenTrue: regexmatch(
+    "^\d{4}-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$",
+    fv!value
+  ),
+  then: "YYYY-MM-DD",
+  /* International Standards ISO 8601 ISO 8601: YYYY-MM-DD (e.g., 2024-08-28)*/
+  whenTrue: regexmatch(
+    "^(0?[1-9]|[12][0-9]|3[01])-(0?[1-9]|1[0-2])-\d{4}$",
+    fv!value
+  ),
+  then: "dd-MM-yyyy",
+  whenTrue: regexmatch(
+    "^(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])-\d{4}$",
+    fv!value
+  ),
+  then: "MM-dd-yyyy",
+  default: "Unknown format"
+)
+
+--- Rule to format to specific format
+#dateString (text)
+
+a!localVariables(
+  local!inputDate: ri!dateString,
+  if(
+    rule!APN_getInputDateFormat(dateString: local!inputDate) = "dd-MM-yyyy",
+    a!localVariables(
+      /* Split the input date string into parts */
+      local!dateParts: split(local!inputDate, "-"),
+      /* Extract day, month, and year from the parts */
+      local!day: local!dateParts[1],
+      local!month: local!dateParts[2],
+      local!year: local!dateParts[3],
+      /* Format the date into the desired format */
+      local!formattedDate: concat(
+        local!month,
+        "/",
+        /* Month */
+        local!day,
+        "/",
+        /* Day */
+        local!year/* Year */
+        
+      ),
+      /* Return the formatted date */
+      text(
+        userdatevalue(local!formattedDate),
+        "MM/DD/YYYY"
+      )
+    ),
+    local!inputDate
+  )
+)
