@@ -1,0 +1,6 @@
+Windows -  cd C:\Users\username\Downloads and .\Generate-Csr.ps1
+ 
+-------
+MACOS -
+ 
+You can make the script executable: chmod +x script.sh and run it with ./script.sh.
