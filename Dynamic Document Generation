@@ -1,0 +1,134 @@
+Multi-page PDF Footer Implementation with Left-Aligned Logo & Page Numbers
+ 
+A sample HTML snippet for your multi-page PDF with a left-aligned logo footer on every page and page numbering centered
+ 
+Sample HTML for Multi-Page PDF Footer (Left-Aligned Logo + Page Number)
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+ @page {
+   margin: 1in;
+ 
+   /* Left aligned logo in footer on every page */
+   @bottom-left {
+     content: url('data:image/png;base64,{{BASE64_LOGO_HERE}}');
+     /* Adjust logo size if needed */
+     /* transform: scale(0.6); */
+   }
+ 
+   /* Centered page numbering on every page */
+   @bottom-center {
+     content: "Confidential - Page " counter(page) " of " counter(pages);
+     font-size: 10px;
+     color: gray;
+   }
+ }
+ 
+ body {
+   font-family: Arial, sans-serif;
+   font-size: 12px;
+   margin: 0;
+   padding: 0;
+ }
+ 
+ /* Content styles */
+ .content {
+   /* example large content to span multiple pages */
+   margin-bottom: 50px; /* prevent overlap with footer */
+ }
+</style>
+</head>
+<body>
+ <div class="content">
+   <!-- Repeat paragraphs to create multi-page content -->
+   <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</p>
+   <p style="page-break-before: always;">More content on next page...</p>
+   <p style="page-break-before: always;">And more content for page 3...</p>
+ </div>
+</body>
+</html>
+ 
+Notes:
+Replace {{BASE64_LOGO_HERE}} with your actual Base64 encoded logo string.
+The @bottom-left and @bottom-center CSS blocks ensure the footer repeats on every page.
+Avoid using <footer> element for repeated footer content due to rendering limitations in Appian's PDF engine.
+ 
+Challenges:
+Using <footer> element with position: running(footer) and @bottom-left { content: element(footer); } places the logo only on the last page.
+Page numbers with counter(page) and counter(pages) work well.
+ 
+Final Working Approach:
+Use the @page CSS pseudo-element and set:
+@bottom-left { content: url('data:image/png;base64,...'); } for the logo repeated on every page.
+@bottom-center { content: "Confidential - Page " counter(page) " of " counter(pages); } for page numbers.
+Remove any <footer> HTML elements from the body.
+Keep all main content inside the <body> with enough bottom margin/padding.
+ 
+Sample HTML snippet:
+(Included as attachment or below)
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+ @page {
+   margin: 1in;
+   @bottom-left {
+     content: url('data:image/png;base64,{{BASE64_LOGO_HERE}}');
+   }
+   @bottom-center {
+     content: "Confidential - Page " counter(page) " of " counter(pages);
+     font-size: 10px;
+     color: gray;
+   }
+ }
+ body {
+   font-family: Arial, sans-serif;
+   font-size: 12px;
+ }
+ .content {
+   margin-bottom: 50px;
+ }
+</style>
+</head>
+<body>
+ <div class="content">
+   <!-- your dynamic content here -->
+ </div>
+</body>
+</html>
+
+
+a!localVariables(
+  local!html: "<!DOCTYPE html>" &
+    "<html>" &
+    "<head>" &
+    "<style>" &
+    "  @page { " &
+    "    margin: 1in; " &
+    "    @bottom-left { " &
+    "      content: url('data:image/png;base64," & cons!BASE64_LOGO & "'); " &
+    "    } " &
+    "    @bottom-center { " &
+    "      content: 'Confidential - Page ' counter(page) ' of ' counter(pages); " &
+    "      font-size: 10px; color: gray; " &
+    "    } " &
+    "  } " &
+    "  body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 0; } " &
+    "  .content { margin-bottom: 50px; } " &
+    "</style>" &
+    "</head>" &
+    "<body>" &
+    "<div class='content'>" &
+    /* Repeat some paragraphs to generate 3+ pages */
+    a!forEach(
+      items: enumerate(60),
+      expression: "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae sapien nec sapien luctus porttitor. Donec venenatis dignissim sapien nec faucibus. Nulla facilisi. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae.</p>"
+    ) &
+    "</div>" &
+    "</body>" &
+    "</html>",
+ 
+  /* Return your PDF using your usual method, e.g.: */
+  local!html
+)
