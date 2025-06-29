@@ -1,0 +1,64 @@
+# Variables - customize these
+$privateKeyFile = "private_key.pem"
+$csrFile = "request.csr"
+$password = "sandoz#Appian@2025"  # <-- Replace with your password
+$configFile = "openssl.cnf"
+ 
+# Create OpenSSL config file content with CN and SANs
+$configContent = @"
+[ req ]
+default_bits       = 2048
+prompt             = no
+default_md         = sha256
+distinguished_name = dn
+req_extensions     = req_ext
+ 
+[ dn ]
+CN = *.appiancloud.com
+ 
+[ req_ext ]
+subjectAltName = @alt_names
+ 
+[ alt_names ]
+DNS.1 = *.appiancloud.com
+DNS.2 = *.api.appiancloud.com
+DNS.3 = api.appiancloud.com
+DNS.4 = *.appiancloud-dynamic.com
+DNS.5 = appiancloud-static.com
+DNS.6 = appiancloud.com
+DNS.7 = appiancloud-dynamic.com
+DNS.8 = *.appiancloud-static.com
+"@
+ 
+# Write config file to disk
+$configContent | Out-File -FilePath $configFile -Encoding ascii
+Write-Host "OpenSSL config file '$configFile' created."
+ 
+# Generate password-protected private key
+Write-Host "Generating password-protected RSA private key..."
+$genKeyCmd = "openssl genpkey -algorithm RSA -aes256 -pass pass:"$password" -out $privateKeyFile -pkeyopt rsa_keygen_bits:2048"
+Invoke-Expression $genKeyCmd
+ 
+if (-not (Test-Path $privateKeyFile)) {
+    Write-Error "Private key generation failed!"
+    exit 1
+}
+Write-Host "Private key generated: $privateKeyFile"
+ 
+# Generate CSR using the private key and config file
+Write-Host "Generating CSR..."
+$genCsrCmd = "openssl req -new -key $privateKeyFile -passin pass:"$password" -out $csrFile -config $configFile"
+Invoke-Expression $genCsrCmd
+ 
+if (-not (Test-Path $csrFile)) {
+    Write-Error "CSR generation failed!"
+    exit 1
+}
+Write-Host "CSR generated: $csrFile"
+ 
+# Verify the SANs in the CSR
+Write-Host "Verifying SANs in CSR..."
+$verifyCmd = "openssl req -in $csrFile -noout -text | Select-String -Pattern 'Subject Alternative Name' -Context 0,10"
+Invoke-Expression $verifyCmd
+ 
+Write-Host "Script complete."
